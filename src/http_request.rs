@@ -34,15 +34,21 @@ pub fn parse_http_request(request_lines: &[String]) -> HttpRequest {
     let http_version = method_path_version[2].to_string();
 
     let mut headers = HashMap::new();
-    for line in &request_lines[1..] {
+    let mut body = None;
+
+    let mut line_iter = request_lines.iter().skip(1);
+    while let Some(line) = line_iter.next() {
+        if line.trim().is_empty() {
+            let body_lines: Vec<&str> = line_iter.map(|l| l.as_str()).collect();
+            body = Some(body_lines.join("\n"));
+            break;
+        }
         if let Some(index) = line.find(':') {
             let header_name = line[..index].trim().to_string();
             let header_value = line[(index + 1)..].trim().to_string();
             headers.insert(header_name, header_value);
         }
     }
-
-    let body = None; // No body parsing implemented in this example
 
     HttpRequest::new(method, path, http_version, headers, body)
 }

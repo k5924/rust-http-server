@@ -5,6 +5,7 @@ use std::{
 };
 
 mod http_request;
+mod route_handler;
 
 fn handle_connection(mut stream: TcpStream) {
     let buf_reader = BufReader::new(&mut stream);
@@ -18,12 +19,11 @@ fn handle_connection(mut stream: TcpStream) {
 
     println!("Request: {parsed_request:#?}");
 
-    let response = match parsed_request.path.as_str() {
-        "/" => "HTTP/1.1 200 OK\r\n\r\n",
-        _ => "HTTP/1.1 404 Not Found\r\n\r\n",
-    };
+    let handler = route_handler::handle_request(&parsed_request);
 
-    stream.write_all(response.as_bytes()).unwrap();
+    let response = handler.execute();
+
+    stream.write_all(response).unwrap();
 }
 
 fn main() {
