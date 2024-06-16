@@ -4,8 +4,11 @@ use std::{
     net::{TcpListener, TcpStream},
 };
 
+use crate::thread_pool::ThreadPool;
+
 mod http_request;
 mod route_handler;
+mod thread_pool;
 
 fn handle_connection(mut stream: TcpStream) {
     let buf_reader = BufReader::new(&mut stream);
@@ -33,10 +36,15 @@ fn main() {
     // Uncomment this block to pass the first stage
 
     let listener = TcpListener::bind("127.0.0.1:4221").unwrap();
+    let pool = ThreadPool::new(4);
 
     for stream in listener.incoming() {
         let stream = stream.unwrap();
 
-        handle_connection(stream);
+        pool.execute(|| {
+            handle_connection(stream);
+        });
     }
+
+    println!("Shutting down.");
 }
