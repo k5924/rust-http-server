@@ -4,6 +4,8 @@ use std::{
     net::{TcpListener, TcpStream},
 };
 
+mod http_request;
+
 fn handle_connection(mut stream: TcpStream) {
     let buf_reader = BufReader::new(&mut stream);
     let http_request: Vec<_> = buf_reader
@@ -12,9 +14,14 @@ fn handle_connection(mut stream: TcpStream) {
         .take_while(|line| !line.is_empty())
         .collect();
 
-    println!("Request: {http_request:#?}");
+    let parsed_request = http_request::parse_http_request(&http_request);
 
-    let response = "HTTP/1.1 200 OK\r\n\r\n";
+    println!("Request: {parsed_request:#?}");
+
+    let response = match parsed_request.path.as_str() {
+        "/" => "HTTP/1.1 200 OK\r\n\r\n",
+        _ => "HTTP/1.1 404 Not Found\r\n\r\n",
+    };
 
     stream.write_all(response.as_bytes()).unwrap();
 }
