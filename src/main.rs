@@ -24,9 +24,10 @@ fn handle_connection(mut stream: TcpStream) {
 
     let handler = route_handler::handle_request(&parsed_request);
 
-    let response = handler.execute();
+    let response = handler.execute(&parsed_request);
 
-    stream.write_all(response).unwrap();
+    stream.write_all(&response).unwrap();
+    stream.flush().unwrap();
 }
 
 fn main() {
