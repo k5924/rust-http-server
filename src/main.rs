@@ -18,16 +18,27 @@ fn handle_connection(mut stream: TcpStream) {
         .take_while(|line| !line.is_empty())
         .collect();
 
+    println!("Read request");
+
     let parsed_request = http_request::parse_http_request(&http_request);
 
-    println!("Request: {parsed_request:#?}");
+    println!("Parsed Request: {parsed_request:#?}");
 
     let handler = route_handler::handle_request(&parsed_request);
 
+    println!("Found handler to handle request");
+
     let response = handler.execute(&parsed_request);
 
+    println!("Executed logic on handler for request");
+
     stream.write_all(&response).unwrap();
+
+    println!("Written response");
+
     stream.flush().unwrap();
+
+    println!("Flushed response");
 }
 
 fn main() {
