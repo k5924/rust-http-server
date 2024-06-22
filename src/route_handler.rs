@@ -80,11 +80,13 @@ impl Handler for FileReadHandler {
             info!("File name is provided, checking if file exists");
             let file_name = parts.get(2).unwrap_or(&"");
             if !file_name.is_empty() {
+                info!("Found file name");
                 let mut directory = String::new();
-                directory.push_str("/tmp/data/codecrafters.io/http-server-test/");
+                directory.push_str("/tmp/data/codecrafters.io/http-server-tester/");
                 directory.push_str(file_name);
                 let path = Path::new(&directory);
                 if fs::metadata(path).is_ok() {
+                    info!("File exists at path, reading content");
                     let mut file = File::open(path).unwrap();
                     let mut contents = String::new();
                     file.read_to_string(&mut contents).unwrap();
