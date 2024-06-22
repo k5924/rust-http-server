@@ -92,7 +92,7 @@ impl Handler for FileReadHandler {
                     file.read_to_string(&mut contents).unwrap();
                     response.extend_from_slice(
                         format!(
-                            "200 OK\r\nContent-Type: text/plain\r\nContent-Length: {}\r\n\r\n{}",
+                            "200 OK\r\nContent-Type: application/octet-stream\r\nContent-Length: {}\r\n\r\n{}",
                             contents.len(),
                             contents
                         )
