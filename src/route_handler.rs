@@ -1,3 +1,5 @@
+use log::info;
+
 use crate::http_request::HttpRequest;
 
 pub trait Handler {
@@ -26,7 +28,7 @@ impl Handler for EchoHandler {
         let mut response = "HTTP/1.1 200 OK\r\n".to_string().into_bytes();
         let parts: Vec<&str> = request.path.split('/').collect();
         if parts.len() > 2 {
-            println!("found path to echo on response");
+            info!("found path to echo on response");
             let content: &str = parts.get(2).unwrap();
             response.extend_from_slice(
                 format!(
@@ -50,7 +52,7 @@ impl Handler for UserAgentHandler {
             .get(&"User-Agent".to_string())
             .unwrap_or(&empty_string);
         if !user_agent.is_empty() {
-            println!("Found user agent to write on response");
+            info!("Found user agent to write on response");
             response.extend_from_slice(
                 format!(
                     "Content-Type: text/plain\r\nContent-Length: {}\r\n\r\n{}",
@@ -66,16 +68,16 @@ impl Handler for UserAgentHandler {
 
 pub fn handle_request(request: &HttpRequest) -> Box<dyn Handler> {
     if request.path.starts_with("/echo") {
-        println!("Returning echo handler");
+        info!("Returning echo handler");
         Box::new(EchoHandler)
     } else if request.path.starts_with("/user-agent") {
-        println!("Returning user agent handler");
+        info!("Returning user agent handler");
         Box::new(UserAgentHandler)
     } else if request.path == "/" {
-        println!("Returning root handler");
+        info!("Returning root handler");
         Box::new(RootHandler)
     } else {
-        println!("Returning not found handler");
+        info!("Returning not found handler");
         Box::new(NotFoundHandler)
     }
 }

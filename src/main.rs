@@ -4,6 +4,8 @@ use std::{
     net::{TcpListener, TcpStream},
 };
 
+use log::info;
+
 use crate::thread_pool::ThreadPool;
 
 mod http_request;
@@ -18,32 +20,34 @@ fn handle_connection(mut stream: TcpStream) {
         .take_while(|line| !line.is_empty())
         .collect();
 
-    println!("Read request");
+    info!("Read request");
 
     let parsed_request = http_request::parse_http_request(&http_request);
 
-    println!("Parsed Request: {parsed_request:#?}");
+    info!("Parsed Request: {parsed_request:#?}");
 
     let handler = route_handler::handle_request(&parsed_request);
 
-    println!("Found handler to handle request");
+    info!("Found handler to handle request");
 
     let response = handler.execute(&parsed_request);
 
-    println!("Executed logic on handler for request");
+    info!("Executed logic on handler for request");
 
     stream.write_all(&response).unwrap();
 
-    println!("Written response");
+    info!("Written response");
 
     stream.flush().unwrap();
 
-    println!("Flushed response");
+    info!("Flushed response");
 }
 
 fn main() {
+    log4rs::init_file("log4rs.yaml", Default::default()).expect("unable to load config");
+
     // You can use print statements as follows for debugging, they'll be visible when running tests.
-    println!("Logs from your program will appear here!");
+    info!("Logs from your program will appear here!");
 
     // Uncomment this block to pass the first stage
 
