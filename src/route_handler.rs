@@ -1,4 +1,9 @@
-use log::info;
+use std::fs;
+use std::fs::File;
+use std::io::Read;
+use std::path::Path;
+
+use log::{error, info};
 
 use crate::http_request::HttpRequest;
 
@@ -10,6 +15,7 @@ pub struct RootHandler;
 pub struct NotFoundHandler;
 pub struct EchoHandler;
 pub struct UserAgentHandler;
+pub struct FileReadHandler;
 
 impl Handler for RootHandler {
     fn execute(&self, _request: &HttpRequest) -> Vec<u8> {
@@ -66,6 +72,46 @@ impl Handler for UserAgentHandler {
     }
 }
 
+impl Handler for FileReadHandler {
+    fn execute(&self, request: &HttpRequest) -> Vec<u8> {
+        let mut response = "HTTP/1.1 ".to_string().into_bytes();
+        let parts: Vec<&str> = request.path.split('/').collect();
+        if parts.len() > 2 {
+            info!("File name is provided, checking if file exists");
+            let file_name = parts.get(2).unwrap_or(&"");
+            if !file_name.is_empty() {
+                let mut directory = String::new();
+                directory.push_str("/tmp/data/codecrafters.io/http-server-test/");
+                directory.push_str(file_name);
+                let path = Path::new(&directory);
+                if fs::metadata(path).is_ok() {
+                    let mut file = File::open(path).unwrap();
+                    let mut contents = String::new();
+                    file.read_to_string(&mut contents).unwrap();
+                    response.extend_from_slice(
+                        format!(
+                            "200 OK\r\nContent-Type: text/plain\r\nContent-Length: {}\r\n\r\n{}",
+                            contents.len(),
+                            contents
+                        )
+                        .as_bytes(),
+                    )
+                } else {
+                    error!("Path on disk doesnt exist");
+                    response.extend_from_slice("404 Not Found\r\n\r\n".as_bytes());
+                }
+            } else {
+                error!("No sub path provided");
+                response.extend_from_slice("404 Not Found\r\n\r\n".as_bytes());
+            }
+        } else {
+            error!("No sub path provided");
+            response.extend_from_slice("404 Not Found\r\n\r\n".as_bytes());
+        }
+        response
+    }
+}
+
 pub fn handle_request(request: &HttpRequest) -> Box<dyn Handler> {
     if request.path.starts_with("/echo") {
         info!("Returning echo handler");
@@ -73,6 +119,9 @@ pub fn handle_request(request: &HttpRequest) -> Box<dyn Handler> {
     } else if request.path.starts_with("/user-agent") {
         info!("Returning user agent handler");
         Box::new(UserAgentHandler)
+    } else if request.path.starts_with("/files") {
+        info!("Returning file read handler");
+        Box::new(FileReadHandler)
     } else if request.path == "/" {
         info!("Returning root handler");
         Box::new(RootHandler)
