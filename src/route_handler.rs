@@ -7,6 +7,7 @@ pub trait Handler {
 pub struct RootHandler;
 pub struct NotFoundHandler;
 pub struct EchoHandler;
+pub struct UserAgentHandler;
 
 impl Handler for RootHandler {
     fn execute(&self, _request: &HttpRequest) -> Vec<u8> {
@@ -34,7 +35,28 @@ impl Handler for EchoHandler {
                 )
                 .as_bytes(),
             );
-            response.extend_from_slice(content.as_bytes());
+        }
+        response
+    }
+}
+
+impl Handler for UserAgentHandler {
+    fn execute(&self, request: &HttpRequest) -> Vec<u8> {
+        let mut response = "HTTP/1.1 200 OK\r\n".to_string().into_bytes();
+        let empty_string = "".to_string();
+        let user_agent = request
+            .headers
+            .get(&"User-Agent".to_string())
+            .unwrap_or(&empty_string);
+        if !user_agent.is_empty() {
+            response.extend_from_slice(
+                format!(
+                    "Content-Type: text/plain\r\nContent-Length: {}\r\n\r\n{}",
+                    user_agent.len(),
+                    user_agent
+                )
+                .as_bytes(),
+            )
         }
         response
     }
@@ -43,6 +65,8 @@ impl Handler for EchoHandler {
 pub fn handle_request(request: &HttpRequest) -> Box<dyn Handler> {
     if request.path.starts_with("/echo") {
         Box::new(EchoHandler)
+    } else if request.path.starts_with("/user-agent") {
+        Box::new(UserAgentHandler)
     } else if request.path == "/" {
         Box::new(RootHandler)
     } else {
