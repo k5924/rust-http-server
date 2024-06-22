@@ -22,7 +22,7 @@ impl Handler for NotFoundHandler {
 
 impl Handler for EchoHandler {
     fn execute(&self, request: &HttpRequest) -> Vec<u8> {
-        let mut response = "HTTP/1.1 200 OK \r\n".to_string().into_bytes();
+        let mut response = "HTTP/1.1 200 OK\r\n".to_string().into_bytes();
         let parts: Vec<&str> = request.path.split('/').collect();
         if parts.len() > 2 {
             let content: &str = parts.get(2).unwrap();
